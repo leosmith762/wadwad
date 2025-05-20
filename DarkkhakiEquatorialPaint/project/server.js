@@ -3,23 +3,7 @@ const { settings, authentication } = require("./config/config");
 
 const bot = new Highrise(authentication.token, authentication.room);
 
-// Keep track of connected users manually
-const users = new Map(); // userId => username
-
-// Store coin balances
-const balances = {};
-
-// 8ball answers
-const answers = [
-  "It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
-  "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.",
-  "Yes.", "Signs point to yes.", "Reply hazy, try again.", "Ask again later.",
-  "Better not tell you now.", "Cannot predict now.", "Concentrate and ask again.",
-  "Don't count on it.", "My reply is no.", "My sources say no.",
-  "Outlook not so good.", "Very doubtful."
-];
-
-// Your emotes list
+// Emote list (your full list preserved)
 const emotes = [
   ["Sit", "idle-loop-sitfloor"],
   ["Enthused", "idle-enthusiastic"],
@@ -114,68 +98,105 @@ const emotes = [
   ["Push it", "dance-employee"]
 ];
 
-// When a user joins
-bot.on("userJoined", (user) => {
-  users.set(user.id, user.username);
-  balances[user.id] ??= 100; // starting balance
+// Dance-only emotes
+const danceEmotes = emotes.filter(e => e[1].startsWith("dance") || e[1].startsWith("idle-dance"));
+
+// Track personal auto dances
+const userAutoDanceIntervals = new Map();
+
+// Send emote list
+function sendEmoteList(userId) {
+  const chunkSize = 20;
+  for (let i = 0; i < emotes.length; i += chunkSize) {
+    const chunk = emotes.slice(i, i + chunkSize)
+      .map((e, idx) => `${i + idx + 1}: ${e[0]}`)
+      .join("\n");
+    bot.whisper.send(userId, `📃 Emote List:\n${chunk}`);
+  }
+}
+
+bot.on('ready', () => {
+  console.log("✅ Bot is ready.");
 });
 
-// When a user leaves
-bot.on("userLeft", (user) => {
-  users.delete(user.id);
+// 🎉 Welcome new players
+bot.on('playerJoin', async (player) => {
+  bot.whisper.send(player.id, `👋 Welcome to the room, ${player.username}! Type /emote list to see emotes or /autodanceself start to start dancing!`);
 });
 
-// On chat message
-bot.on("chat", (user, message) => {
+let currentMusicUrl = null;
+
+bot.on('chatMessageCreate', async (user, message) => {
   if (!message.startsWith("/")) return;
 
-  const [command, ...args] = message.slice(1).trim().split(/\s+/);
+  const args = message.slice(1).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
 
-  if (command === "balance") {
-    balances[user.id] ??= 100;
-    bot.whisper.send(user.id, `💰 Your balance: ${balances[user.id]} coins.`);
+  if (command === 'emote') {
+    if (args[0] === 'list') return sendEmoteList(user.id);
+
+    const index = parseInt(args[0]);
+    if (isNaN(index) || index < 1 || index > emotes.length) {
+      return bot.whisper.send(user.id, `❌ Invalid emote number.`);
+    }
+
+    const emoteId = emotes[index - 1][1];
+    try {
+      await bot.player.emote(user.id, emoteId);
+      bot.whisper.send(user.id, `🎉 Emoting: ${emotes[index - 1][0]}`);
+    } catch {
+      bot.whisper.send(user.id, `❌ Failed to play emote.`);
+    }
   }
 
-  else if (command === "gamble") {
-    const amount = parseInt(args[0]);
-    if (isNaN(amount) || amount <= 0) {
-      return bot.whisper.send(user.id, "❗ Usage: /gamble <positive number>");
+  else if (command === "play") {
+    const url = args[0];
+    if (!url) return bot.whisper.send(user.id, "❗ Usage: /play <music-url>");
+    try {
+      await bot.music.play(url);
+      currentMusicUrl = url;
+      bot.whisper.send(user.id, `🎵 Now playing: ${url}`);
+    } catch {
+      bot.whisper.send(user.id, "❌ Failed to play music.");
     }
-    balances[user.id] ??= 100;
-    if (balances[user.id] < amount) {
-      return bot.whisper.send(user.id, `❌ You only have ${balances[user.id]} coins.`);
+  }
+
+  else if (command === "stopmusic") {
+    if (!currentMusicUrl) return bot.whisper.send(user.id, "❗ No music is currently playing.");
+    try {
+      await bot.music.stop();
+      currentMusicUrl = null;
+      bot.whisper.send(user.id, "🛑 Music stopped.");
+    } catch {
+      bot.whisper.send(user.id, "❌ Failed to stop music.");
+    }
+  }
+
+  else if (command === "autodanceself") {
+    const sub = args[0]?.toLowerCase();
+    if (!sub || !["start", "stop"].includes(sub)) {
+      return bot.whisper.send(user.id, "❗ Usage: /autodanceself <start|stop>");
     }
 
-    const win = Math.random() < 0.5;
-    if (win) {
-      balances[user.id] += amount;
-      bot.whisper.send(user.id, `🎉 You won ${amount} coins! New balance: ${balances[user.id]}.`);
+    if (sub === "start") {
+      if (userAutoDanceIntervals.has(user.id)) {
+        return bot.whisper.send(user.id, "🕺 You're already auto dancing!");
+      }
+
+      bot.whisper.send(user.id, "🕺 Starting your auto dance every 15 seconds.");
+      const interval = setInterval(async () => {
+        try {
+          const random = danceEmotes[Math.floor(Math.random() * danceEmotes.length)];
+          await bot.player.emote(user.id, random[1]);
+        } catch (e) {
+          console.error(e);
+        }
+      }, 15000);
+      userAutoDanceIntervals.set(user.id, interval);
     } else {
-      balances[user.id] -= amount;
-      bot.whisper.send(user.id, `😢 You lost ${amount} coins. New balance: ${balances[user.id]}.`);
+      clearInterval(userAutoDanceIntervals.get(user.id));
+      userAutoDanceIntervals.delete(user.id);
+      bot.whisper.send(user.id, "🛑 Auto dance stopped.");
     }
-  }
-
-  else if (command === "8ball") {
-    const question = args.join(" ");
-    if (!question) {
-      return bot.whisper.send(user.id, "🎱 Ask a question to get an answer!");
-    }
-    const response = answers[Math.floor(Math.random() * answers.length)];
-    bot.whisper.send(user.id, `🎱 ${response}`);
-  }
-
-  else if (command === "emote") {
-    // /emote <number>
-    const index = parseInt(args[0]) - 1;
-    if (isNaN(index) || index < 0 || index >= emotes.length) {
-      // List all emotes for the user
-      const emoteList = emotes.map((e, i) => `${i + 1}. ${e[0]}`).join("\n");
-      return bot.whisper.send(user.id, `📃 Emote list:\n${emoteList}`);
-    }
-    const emoteName = emotes[index][1];
-    bot.emote.perform(user.id, emoteName);
   }
 });
-
-console.log("Bot is running...");

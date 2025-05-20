@@ -1,15 +1,17 @@
 {
-  "name": "nodejs",
-  "version": "1.0.0",
-  "description": "",
+  "name": "highrise-bot",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "dependencies": {
+    "express": "^5.1.0",
+    "highrise-js-sdk": "^1.0.0",
+    "socket.io": "^4.8.1"
   },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "version": "1.0.0",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@types/node": "^22.13.11"
-  }
+  "description": ""
 }
