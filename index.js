@@ -190,9 +190,10 @@ bot.on("chat", async (user, message) => {
         }
 
         try {
-          await bot.emote.perform(user.id, emotes[index][1]);
-          bot.whisper.send(user.id, `🎭 Performing: ${emotes[index][0]}`);
+          await bot.player.emote(user.id, emotes[index][1]);
+          bot.chat.send(`🎭 ${user.username} is performing: ${emotes[index][0]}`);
         } catch (err) {
+          console.error("Emote error:", err);
           bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
         }
         break;
