@@ -126,6 +126,75 @@
       padding: 2rem 0 1rem;
       font-size: 0.9rem;
     }
+
+    /* Person avatar container */
+    .avatar-container {
+      margin: 1.5rem auto 2rem;
+      width: 160px;
+      text-align: center;
+      user-select: none;
+    }
+    .emote-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      min-height: 1.3rem;
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+    /* Simple cartoon person using CSS */
+    .avatar {
+      position: relative;
+      margin: auto;
+      width: 100px;
+      height: 180px;
+      background: #666;
+      border-radius: 50% / 40%;
+      box-shadow:
+        0 0 0 6px #333 inset,
+        0 4px 6px rgba(0,0,0,0.5);
+      transition: background-color 0.3s ease;
+    }
+    .avatar::before {
+      content: "";
+      position: absolute;
+      top: 60px;
+      left: 10px;
+      width: 80px;
+      height: 100px;
+      background: #888;
+      border-radius: 50% / 40%;
+      box-shadow:
+        inset 0 -10px 10px rgba(0,0,0,0.2),
+        0 2px 3px rgba(0,0,0,0.3);
+    }
+    .avatar .eye {
+      position: absolute;
+      top: 35px;
+      width: 14px;
+      height: 14px;
+      background: #222;
+      border-radius: 50%;
+      box-shadow: 0 0 3px #000 inset;
+    }
+    .avatar .eye.left {
+      left: 25px;
+    }
+    .avatar .eye.right {
+      right: 25px;
+    }
+    .avatar .mouth {
+      position: absolute;
+      bottom: 35px;
+      left: 50%;
+      width: 40px;
+      height: 10px;
+      background: #222;
+      border-radius: 0 0 20px 20px;
+      transform: translateX(-50%);
+    }
+
   </style>
 </head>
 <body>
@@ -138,6 +207,16 @@
 </nav>
 
 <main>
+  <!-- Person doing emote -->
+  <div class="avatar-container">
+    <div class="emote-label" id="emote-label">Waiting for emote...</div>
+    <div class="avatar" id="avatar">
+      <div class="eye left"></div>
+      <div class="eye right"></div>
+      <div class="mouth"></div>
+    </div>
+  </div>
+
   <!-- Emotes -->
   <section id="emotes" class="active">
     <h2>🕺 Emotes List</h2>
@@ -200,19 +279,33 @@
     ["Fashionista", "emote-fashionista"], ["Gravity", "emote-gravity"], ["Ice Cream Dance", "dance-icecream"],
     ["Wrong Dance", "dance-wrong"], ["UwU", "idle-uwu"], ["TikTok Dance 4", "idle-dance-tiktok4"],
     ["Advanced Shy", "emote-shy2"], ["Anime Dance", "dance-anime"], ["Kawaii", "dance-kawai"],
-    ["Scritchy", "idle-wild"], ["Ice Skating", "emote-iceskating"], ["SurpriseBig", "emote-pose6"],
-    ["Celebration Step", "emote-celebrationstep"], ["Creepycute", "emote-creepycute"], ["Pose 10", "emote-pose10"],
-    ["Boxer", "emote-boxer"], ["Head Blowup", "emote-headblowup"], ["Ditzy Pose", "emote-pose9"],
-    ["Teleporting", "emote-teleporting"], ["Touch", "dance-touch"], ["Air Guitar", "idle-guitar"],
-    ["This Is For You", "emote-gift"], ["Push it", "dance-employee"]
+    ["Scritchy", "idle-wild"], ["Ice Skating", "emote-iceskating"], ["Surprise", "emote-surprise"],
+    ["Banana Dance", "dance-banana"], ["Bunny", "emote-bunny"], ["Classic Dance", "idle-dance-classic"],
+    ["Boss", "idle-boss"], ["Shake Legs", "emote-shakelegs"], ["TikTok Dance 5", "dance-tiktok5"],
+    ["Unicorn", "emote-unicorn"], ["Headphones", "idle-headphones"], ["Iridescent Dance", "dance-iridescent"],
+    ["Hair Flip", "emote-hairflip"], ["Half Clap", "emote-halfclap"], ["Quiet", "emote-quiet"],
+    ["Selfie", "emote-selfie"], ["Lick", "emote-lick"], ["Artsy", "emote-artsy"],
+    ["Get Down", "emote-getdown"], ["Mad Dance", "dance-maddance"], ["Shoot", "emote-shoot"],
+    ["Jumping Jack", "emote-jumpingjack"], ["Scared", "emote-scared"], ["Push it", "dance-employee"]
   ];
 
   const emotesGrid = document.getElementById("emotes-grid");
+  const emoteLabel = document.getElementById("emote-label");
 
   function triggerEmote(index) {
-    // Example function to trigger emote by index
-    // Replace with your actual bot interaction code
-    alert(`Triggering emote #${index + 1}: ${emotes[index][0]} (${emotes[index][1]})`);
+    // Update the label above the avatar
+    emoteLabel.textContent = `Doing: ${emotes[index][0]}`;
+
+    // Example placeholder to visually simulate an emote
+    // Here you could add avatar color changes or other effects
+
+    // For example, briefly change avatar color to accent and back
+    const avatar = document.getElementById("avatar");
+    avatar.style.backgroundColor = "#f39c12";
+
+    setTimeout(() => {
+      avatar.style.backgroundColor = "#666";
+    }, 1000);
   }
 
   // Render emotes grid
@@ -222,7 +315,7 @@
     card.innerHTML = `
       <div class="emote-number">#${i + 1}</div>
       <div class="emote-name">${emote[0]}</div>
-      <button onclick="triggerEmote(${i})">Test</button>
+      <button onclick="triggerEmote(${i})" aria-label="Test emote ${emote[0]}">Test</button>
     `;
     emotesGrid.appendChild(card);
   });
