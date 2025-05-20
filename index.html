@@ -308,7 +308,9 @@
             <h2>Avatar Preview</h2>
             <div class="avatar-container">
                 <div class="avatar" id="avatar">
-                    👤
+                    <div class="avatar-head"></div>
+                    <div class="avatar-body"></div>
+                    <div class="avatar-legs"></div>
                 </div>
                 <div class="avatar-controls">
                     <select id="emote-select" onchange="previewEmote(this.value)">
@@ -349,16 +351,43 @@
         }
 
         .avatar {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 200px;
             background: var(--card-bg);
-            border-radius: 50%;
+            border-radius: 10px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
             transition: all 0.3s ease;
             border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-head {
+            width: 60px;
+            height: 60px;
+            background: #ffd7b5;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .avatar-body {
+            width: 80px;
+            height: 100px;
+            background: var(--primary);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .avatar-legs {
+            width: 60px;
+            height: 40px;
+            background: #4a4a4a;
+            border-radius: 10px;
+            position: relative;
         }
 
         .avatar-controls {
@@ -431,19 +460,25 @@
             setTimeout(() => avatar.style.transform = 'scale(1)', 300);
             
             // Simulate emote with emoji
-            const emoteEmojis = {
-                'Sit': '🪑',
-                'Wave': '👋',
-                'Tired': '😴',
-                'Shy': '🙈',
-                'Sad': '😢',
-                'Model': '💃',
-                'Laugh': '😄',
-                'Kiss': '😘'
+            const avatar = document.getElementById('avatar');
+            const emoteName = emotes[index][0];
+            
+            // Add animation class based on emote
+            avatar.className = 'avatar';
+            requestAnimationFrame(() => {
+                avatar.className = 'avatar animate-' + emoteName.toLowerCase().replace(/\s+/g, '-');
+            });
+            
+            // Add some basic animations
+            const animations = {
+                'wave': 'transform: rotate(-10deg)',
+                'sit': 'transform: scale(0.8) translateY(20px)',
+                'jump': 'transform: translateY(-20px)',
+                'dance': 'transform: rotate(5deg)'
             };
             
-            const emoteName = emotes[index][0];
-            avatar.textContent = emoteEmojis[emoteName] || '👤';
+            avatar.style.cssText = animations[emoteName.toLowerCase()] || '';
+            setTimeout(() => avatar.style.cssText = '', 1000);
         }
 
         function changeOutfit(color) {
