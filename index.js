@@ -210,4 +210,26 @@ bot.on('chatMessageCreate', async (user, message) => {
     if (!sub || !["start", "stop"].includes(sub)) {
       return bot.whisper.send(user.id, "❗ Usage: /autodanceself <start|stop>");
     }
+
+    if (sub === "start") {
+      if (userAutoDanceIntervals.has(user.id)) {
+        return bot.whisper.send(user.id, "🕺 You're already auto dancing!");
+      }
+
+      bot.whisper.send(user.id, "🕺 Starting your auto dance every 15 seconds.");
+      const interval = setInterval(async () => {
+        try {
+          const random = danceEmotes[Math.floor(Math.random() * danceEmotes.length)];
+          await bot.player.emote(user.id, random[1]);
+        } catch (e) {
+          console.error(e);
+        }
+      }, 15000);
+      userAutoDanceIntervals.set(user.id, interval);
+    } else {
+      clearInterval(userAutoDanceIntervals.get(user.id));
+      userAutoDanceIntervals.delete(user.id);
+      bot.whisper.send(user.id, "🛑 Auto dance stopped.");
+    }
   }
+});
