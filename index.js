@@ -3,7 +3,7 @@ const { settings, authentication } = require("./config/config");
 
 const bot = new Highrise(authentication.token, authentication.room);
 
-// Full emotes list as provided
+// Emote list (your full list preserved)
 const emotes = [
   ["Sit", "idle-loop-sitfloor"],
   ["Enthused", "idle-enthusiastic"],
@@ -98,18 +98,20 @@ const emotes = [
   ["Push it", "dance-employee"]
 ];
 
-// Dance-only emotes (for autodance)
+// Filter dance emotes for auto dance use
 const danceEmotes = emotes.filter(e => e[1].startsWith("dance") || e[1].startsWith("idle-dance"));
 
+// Track auto dance intervals per user
 const userAutoDanceIntervals = new Map();
 
-function sendEmoteList(userId) {
+// Send emote list in chunks so whisper doesn't flood
+async function sendEmoteList(userId) {
   const chunkSize = 20;
   for (let i = 0; i < emotes.length; i += chunkSize) {
     const chunk = emotes.slice(i, i + chunkSize)
       .map((e, idx) => `${i + idx + 1}: ${e[0]}`)
       .join("\n");
-    bot.whisper.send(userId, `📃 Emote List:\n${chunk}`);
+    await bot.whisper.send(userId, `📃 Emote List:\n${chunk}`);
   }
 }
 
@@ -118,44 +120,8 @@ bot.on('ready', () => {
 });
 
 bot.on('playerJoin', async (player) => {
-  bot.whisper.send(player.id, `👋 Welcome to the room, ${player.username}! Type /emote list to see emotes or /autodanceself start to start dancing!`);
+  await bot.whisper.send(player.id, `👋 Welcome to the room, ${player.username}! Type /emote list to see emotes or /autodanceself start to start dancing!`);
 });
-
-// Simple coin system
-const userBalances = new Map();
-
-function getBalance(userId) {
-  if (!userBalances.has(userId)) userBalances.set(userId, 100);
-  return userBalances.get(userId);
-}
-
-function updateBalance(userId, amount) {
-  const newBal = getBalance(userId) + amount;
-  userBalances.set(userId, newBal < 0 ? 0 : newBal);
-  return userBalances.get(userId);
-}
-
-const eightBallAnswers = [
-  "It is certain.",
-  "Without a doubt.",
-  "You may rely on it.",
-  "Yes – definitely.",
-  "As I see it, yes.",
-  "Most likely.",
-  "Outlook good.",
-  "Yes.",
-  "Signs point to yes.",
-  "Reply hazy, try again.",
-  "Ask again later.",
-  "Better not tell you now.",
-  "Cannot predict now.",
-  "Concentrate and ask again.",
-  "Don't count on it.",
-  "My reply is no.",
-  "My sources say no.",
-  "Outlook not so good.",
-  "Very doubtful."
-];
 
 let currentMusicUrl = null;
 
@@ -166,57 +132,62 @@ bot.on('chatMessageCreate', async (user, message) => {
   const command = args.shift().toLowerCase();
 
   if (command === 'emote') {
-    if (args[0] === 'list') return sendEmoteList(user.id);
+    if (args[0]?.toLowerCase() === 'list') {
+      return sendEmoteList(user.id);
+    }
 
     const index = parseInt(args[0]);
     if (isNaN(index) || index < 1 || index > emotes.length) {
-      return bot.whisper.send(user.id, `❌ Invalid emote number.`);
+      return bot.whisper.send(user.id, `❌ Invalid emote number. Use /emote list to see all emotes.`);
     }
 
     const emoteId = emotes[index - 1][1];
     try {
       await bot.player.emote(user.id, emoteId);
-      bot.whisper.send(user.id, `🎉 Emoting: ${emotes[index - 1][0]}`);
-    } catch {
-      bot.whisper.send(user.id, `❌ Failed to play emote.`);
+      await bot.whisper.send(user.id, `🎉 Emoting: ${emotes[index - 1][0]}`);
+    } catch (err) {
+      console.error(err);
+      await bot.whisper.send(user.id, `❌ Failed to play emote.`);
     }
   }
 
   else if (command === "play") {
     const url = args[0];
-    if (!url) return bot.whisper.send(user.id, "❗ Usage: /play <music-url>");
+    if (!url) return await bot.whisper.send(user.id, "❗ Usage: /play <music-url>");
     try {
       await bot.music.play(url);
       currentMusicUrl = url;
-      bot.whisper.send(user.id, `🎵 Now playing: ${url}`);
-    } catch {
-      bot.whisper.send(user.id, "❌ Failed to play music.");
+      await bot.whisper.send(user.id, `🎵 Now playing: ${url}`);
+    } catch (err) {
+      console.error(err);
+      await bot.whisper.send(user.id, "❌ Failed to play music.");
     }
   }
 
   else if (command === "stopmusic") {
-    if (!currentMusicUrl) return bot.whisper.send(user.id, "❗ No music is currently playing.");
+    if (!currentMusicUrl) return await bot.whisper.send(user.id, "❗ No music is currently playing.");
     try {
       await bot.music.stop();
       currentMusicUrl = null;
-      bot.whisper.send(user.id, "🛑 Music stopped.");
-    } catch {
-      bot.whisper.send(user.id, "❌ Failed to stop music.");
+      await bot.whisper.send(user.id, "🛑 Music stopped.");
+    } catch (err) {
+      console.error(err);
+      await bot.whisper.send(user.id, "❌ Failed to stop music.");
     }
   }
 
   else if (command === "autodanceself") {
     const sub = args[0]?.toLowerCase();
     if (!sub || !["start", "stop"].includes(sub)) {
-      return bot.whisper.send(user.id, "❗ Usage: /autodanceself <start|stop>");
+      return await bot.whisper.send(user.id, "❗ Usage: /autodanceself <start|stop>");
     }
 
     if (sub === "start") {
       if (userAutoDanceIntervals.has(user.id)) {
-        return bot.whisper.send(user.id, "🕺 You're already auto dancing!");
+        return await bot.whisper.send(user.id, "🕺 You're already auto dancing!");
       }
 
-      bot.whisper.send(user.id, "🕺 Starting your auto dance every 15 seconds.");
+      await bot.whisper.send(user.id, "🕺 Starting your auto dance every 15 seconds.");
       const interval = setInterval(async () => {
         try {
           const random = danceEmotes[Math.floor(Math.random() * danceEmotes.length)];
@@ -227,9 +198,24 @@ bot.on('chatMessageCreate', async (user, message) => {
       }, 15000);
       userAutoDanceIntervals.set(user.id, interval);
     } else {
-      clearInterval(userAutoDanceIntervals.get(user.id));
-      userAutoDanceIntervals.delete(user.id);
-      bot.whisper.send(user.id, "🛑 Auto dance stopped.");
+      if (userAutoDanceIntervals.has(user.id)) {
+        clearInterval(userAutoDanceIntervals.get(user.id));
+        userAutoDanceIntervals.delete(user.id);
+        await bot.whisper.send(user.id, "🛑 Auto dance stopped.");
+      } else {
+        await bot.whisper.send(user.id, "❌ You are not currently auto dancing.");
+      }
     }
   }
+
+  else if (command === "help") {
+    const helpMessage = `📜 Commands:
+    /emote <number> - Play an emote (use /emote list to see numbers)
+    /autodanceself start|stop - Start or stop auto dancing
+    /play <url> - Play music
+    /stopmusic - Stop music
+    /help - Show this message`;
+    await bot.whisper.send(user.id, helpMessage);
+  }
 });
+

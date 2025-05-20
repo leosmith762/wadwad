@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -204,11 +203,11 @@
             .container {
                 padding: 10px;
             }
-            
+
             .stat-card, .commands-section, .live-feed {
                 padding: 15px;
             }
-            
+
             .stat-value {
                 font-size: 2em;
             }
@@ -483,14 +482,14 @@
         function previewEmote(index) {
             const avatar = document.getElementById('avatar');
             if (!index) return;
-            
+
             avatar.style.transform = 'scale(1.1)';
             setTimeout(() => avatar.style.transform = 'scale(1)', 300);
-            
+
             // Simulate emote with emoji
             const emoteName = emotes[index][0];
             const emoteType = emotes[index][1].split('-')[0];
-            
+
             // Add animation class based on emote type
             avatar.className = 'avatar';
             requestAnimationFrame(() => {
@@ -507,7 +506,7 @@
                         break;
                 }
             });
-            
+
             // Add some basic animations
             const animations = {
                 'wave': 'transform: rotate(-10deg)',
@@ -515,7 +514,7 @@
                 'jump': 'transform: translateY(-20px)',
                 'dance': 'transform: rotate(5deg)'
             };
-            
+
             avatar.style.cssText = animations[emoteName.toLowerCase()] || '';
             setTimeout(() => avatar.style.cssText = '', 1000);
         }
@@ -527,14 +526,12 @@
 
         // Handle chat messages
         const chatContainer = document.getElementById('chat-container');
-        socket.on('botEvent', data => {
-            if (data.type === 'chat') {
-                const chatMsg = document.createElement('div');
-                chatMsg.className = 'chat-message';
-                chatMsg.innerHTML = `<span class="chat-username">${data.data.username}:</span> ${data.data.message}`;
-                chatContainer.appendChild(chatMsg);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
+        socket.on('chat', (data) => {
+            const chatMsg = document.createElement('div');
+            chatMsg.className = 'chat-message';
+            chatMsg.innerHTML = `<span class="chat-username">${data.username}:</span> ${data.message}`;
+            chatContainer.appendChild(chatMsg);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         });
     </script>
 
@@ -610,7 +607,7 @@
         socket.on('stats', data => {
             document.getElementById('online-users').textContent = data.onlineUsers;
             document.getElementById('commands-used').textContent = data.commandsUsed;
-            
+
             const uptime = Math.floor((Date.now() - startTime) / 1000 / 60);
             const hours = Math.floor(uptime / 60);
             const minutes = uptime % 60;
@@ -621,15 +618,15 @@
         socket.on('botEvent', data => {
             const item = document.createElement('div');
             item.className = 'feed-item';
-            
+
             const time = document.createElement('span');
             time.className = 'feed-time';
             time.textContent = new Date().toLocaleTimeString();
-            
+
             const content = document.createElement('span');
             content.className = 'feed-content';
             content.textContent = `${data.type}: ${JSON.stringify(data.data)}`;
-            
+
             item.appendChild(time);
             item.appendChild(content);
             feed.insertBefore(item, feed.firstChild);
@@ -650,3 +647,7 @@
     </script>
 </body>
 </html>
+```
+
+```
+</replit_final_file>
