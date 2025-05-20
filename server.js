@@ -28,7 +28,16 @@ io.on('connection', (socket) => {
         onlineUsers--;
         io.emit('stats', { onlineUsers, commandsUsed });
     });
+
+    socket.on('chat', (message) => {
+        io.emit('chat', message);
+    });
 });
+
+// Hook into bot chat events
+global.emitChatMessage = (username, message) => {
+    io.emit('chat', { username, message });
+};
 
 // Add bot event emitter
 global.emitBotEvent = (eventType, data) => {

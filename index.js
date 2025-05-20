@@ -126,6 +126,10 @@ bot.on('playerJoin', async (player) => {
 let currentMusicUrl = null;
 
 bot.on('chatMessageCreate', async (user, message) => {
+    // Emit chat message to website
+    if (global.emitChatMessage) {
+        global.emitChatMessage(user.username, message);
+    }
   if (!message.startsWith("/")) return;
 
   const args = message.slice(1).trim().split(/ +/);
