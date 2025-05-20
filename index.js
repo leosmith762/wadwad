@@ -114,65 +114,68 @@ const emotes = [
   ["Push it", "dance-employee"]
 ];
 
-// When a user joins
+// On user join
 bot.on("userJoined", (user) => {
   users.set(user.id, user.username);
-  balances[user.id] ??= 100; // starting balance
+  balances[user.id] ??= 100; // start balance
+  global.emitBotEvent?.('join', { username: user.username });
 });
 
-// When a user leaves
+// On user leave
 bot.on("userLeft", (user) => {
   users.delete(user.id);
+  global.emitBotEvent?.('leave', { username: user.username });
 });
 
-// Handle commands
+// Command handler
 bot.on("chat", async (user, message) => {
   if (!message.startsWith("/")) return;
 
   const [command, ...args] = message.slice(1).trim().split(/\s+/);
 
   try {
-    switch (command) {
+    switch (command.toLowerCase()) {
       case "balance":
         balances[user.id] ??= 100;
-        bot.whisper.send(user.id, `💰 Your balance: ${balances[user.id]} coins.`);
+        await bot.whisper.send(user.id, `💰 Your balance: ${balances[user.id]} coins.`);
         break;
 
       case "gamble":
+        if (!args[0]) {
+          await bot.whisper.send(user.id, "❗ Usage: /gamble <amount>");
+          return;
+        }
         const amount = parseInt(args[0]);
         if (isNaN(amount) || amount <= 0) {
-          bot.whisper.send(user.id, "❗ Usage: /gamble <positive number>");
+          await bot.whisper.send(user.id, "❗ Please enter a valid positive number to gamble.");
           return;
         }
-
         balances[user.id] ??= 100;
         if (balances[user.id] < amount) {
-          bot.whisper.send(user.id, `❌ You only have ${balances[user.id]} coins.`);
+          await bot.whisper.send(user.id, `❌ You only have ${balances[user.id]} coins.`);
           return;
         }
-
-        const win = Math.random() < 0.5;
-        if (win) {
+        if (Math.random() < 0.5) {
           balances[user.id] += amount;
-          bot.whisper.send(user.id, `🎉 You won ${amount} coins! New balance: ${balances[user.id]}.`);
+          await bot.whisper.send(user.id, `🎉 You won ${amount} coins! New balance: ${balances[user.id]}.`);
         } else {
           balances[user.id] -= amount;
-          bot.whisper.send(user.id, `😢 You lost ${amount} coins. New balance: ${balances[user.id]}.`);
+          await bot.whisper.send(user.id, `😢 You lost ${amount} coins. New balance: ${balances[user.id]}.`);
         }
         break;
 
       case "8ball":
         const question = args.join(" ");
         if (!question) {
-          bot.whisper.send(user.id, "🎱 Ask a question to get an answer!");
+          await bot.whisper.send(user.id, "🎱 Ask me a question!");
           return;
         }
         const response = answers[Math.floor(Math.random() * answers.length)];
-        bot.whisper.send(user.id, `🎱 ${response}`);
+        await bot.whisper.send(user.id, `🎱 ${response}`);
         break;
 
       case "emote":
-        if (!args.length || args[0] === "list") {
+        if (args.length === 0 || args[0].toLowerCase() === "list") {
           const chunkSize = 10;
           for (let i = 0; i < emotes.length; i += chunkSize) {
             const chunk = emotes.slice(i, i + chunkSize)
@@ -183,15 +186,16 @@ bot.on("chat", async (user, message) => {
           return;
         }
 
-        const index = parseInt(args[0]) - 1;
-        if (isNaN(index) || index < 0 || index >= emotes.length) {
+        const idx = parseInt(args[0], 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= emotes.length) {
           await bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
           return;
         }
 
         try {
-          await bot.emote.play(user.id, emotes[index][1]);
-          await bot.chat.send(`🎭 ${user.username} is performing: ${emotes[index][0]}`);
+          // Note: SDK method may vary. Here we assume bot.emote.play(userId, emoteId) works.
+          await bot.emote.play(user.id, emotes[idx][1]);
+          await bot.chat.send(`🎭 ${user.username} is performing: ${emotes[idx][0]}`);
         } catch (err) {
           console.error("Emote error:", err);
           await bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
@@ -199,11 +203,11 @@ bot.on("chat", async (user, message) => {
         break;
 
       default:
-        bot.whisper.send(user.id, "❓ Unknown command. Available commands: /balance, /gamble, /8ball, /emote");
+        await bot.whisper.send(user.id, "❓ Unknown command. Available commands: /balance, /gamble, /8ball, /emote");
     }
-  } catch (error) {
-    console.error("Error handling command:", error);
-    bot.whisper.send(user.id, "❌ An error occurred while processing your command.");
+  } catch (err) {
+    console.error("Command error:", err);
+    await bot.whisper.send(user.id, "❌ An error occurred processing your command.");
   }
 });
 
