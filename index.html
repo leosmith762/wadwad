@@ -351,10 +351,10 @@
         }
 
         .avatar {
-            width: 120px;
-            height: 200px;
+            width: 300px;
+            height: 500px;
             background: var(--card-bg);
-            border-radius: 10px;
+            border-radius: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -366,28 +366,56 @@
         }
 
         .avatar-head {
-            width: 60px;
-            height: 60px;
+            width: 120px;
+            height: 120px;
             background: #ffd7b5;
             border-radius: 50%;
             position: relative;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         .avatar-body {
-            width: 80px;
-            height: 100px;
+            width: 160px;
+            height: 200px;
             background: var(--primary);
-            border-radius: 10px;
+            border-radius: 20px 20px 0 0;
             position: relative;
         }
 
         .avatar-legs {
-            width: 60px;
-            height: 40px;
+            width: 140px;
+            height: 180px;
             background: #4a4a4a;
-            border-radius: 10px;
+            border-radius: 0 0 20px 20px;
             position: relative;
+        }
+
+        .animate-dance {
+            animation: dance 1s infinite;
+        }
+
+        .animate-wave {
+            animation: wave 1s infinite;
+        }
+
+        .animate-jump {
+            animation: jump 0.5s infinite;
+        }
+
+        @keyframes dance {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-15deg); }
+        }
+
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
 
         .avatar-controls {
@@ -460,13 +488,24 @@
             setTimeout(() => avatar.style.transform = 'scale(1)', 300);
             
             // Simulate emote with emoji
-            const avatar = document.getElementById('avatar');
             const emoteName = emotes[index][0];
+            const emoteType = emotes[index][1].split('-')[0];
             
-            // Add animation class based on emote
+            // Add animation class based on emote type
             avatar.className = 'avatar';
             requestAnimationFrame(() => {
-                avatar.className = 'avatar animate-' + emoteName.toLowerCase().replace(/\s+/g, '-');
+                switch(emoteType) {
+                    case 'dance':
+                        avatar.className = 'avatar animate-dance';
+                        break;
+                    case 'emote':
+                        if (emoteName.toLowerCase().includes('wave')) {
+                            avatar.className = 'avatar animate-wave';
+                        } else if (emoteName.toLowerCase().includes('jump')) {
+                            avatar.className = 'avatar animate-jump';
+                        }
+                        break;
+                }
             });
             
             // Add some basic animations
@@ -505,7 +544,7 @@
         const feed = document.getElementById('feed');
         const emoteGrid = document.getElementById('emote-grid');
 
-        // Emotes data
+        // Get full emotes list from bot
         const emotes = [
             ["Sit", "idle-loop-sitfloor"],
             ["Enthused", "idle-enthusiastic"],
@@ -516,10 +555,44 @@
             ["Snow Angel", "emote-snowangel"],
             ["Shy", "emote-shy"],
             ["Sad", "emote-sad"],
+            ["No", "emote-no"],
             ["Model", "emote-model"],
+            ["Flirty Wave", "emote-lust"],
             ["Laugh", "emote-laughing"],
             ["Kiss", "emote-kiss"],
-            ["Hello", "emote-hello"]
+            ["Sweating", "emote-hot"],
+            ["Hello", "emote-hello"],
+            ["Greedy", "emote-greedy"],
+            ["Face Palm", "emote-exasperatedb"],
+            ["Curtsy", "emote-curtsy"],
+            ["Confusion", "emote-confused"],
+            ["Charging", "emote-charging"],
+            ["Bow", "emote-bow"],
+            ["Thumbs Up", "emoji-thumbsup"],
+            ["Tummy Ache", "emoji-gagging"],
+            ["Flex", "emoji-flex"],
+            ["Cursing", "emoji-cursing"],
+            ["Celebrate", "emoji-celebrate"],
+            ["Angry", "emoji-angry"],
+            ["Savage Dance", "dance-tiktok8"],
+            ["TikTok Dance", "dance-tiktok2"],
+            ["Shopping Cart", "dance-shoppingcart"],
+            ["Russian Dance", "dance-russian"],
+            ["Pennywise", "dance-pennywise"],
+            ["Macarena", "dance-macarena"],
+            ["K-Pop", "dance-blackpink"],
+            ["Zombie", "dance-zombie"],
+            ["Penguin", "dance-pinguin"],
+            ["Creepy Puppet", "dance-creepypuppet"],
+            ["TikTok Dance 9", "dance-tiktok9"],
+            ["Weird Dance", "dance-weird"],
+            ["TikTok Dance 10", "dance-tiktok10"],
+            ["Ice Cream Dance", "dance-icecream"],
+            ["Wrong Dance", "dance-wrong"],
+            ["Anime Dance", "dance-anime"],
+            ["Kawaii", "dance-kawai"],
+            ["Touch", "dance-touch"],
+            ["Push It", "dance-employee"]
         ];
 
         // Populate emotes grid
