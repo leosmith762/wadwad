@@ -165,7 +165,7 @@ bot.on("chat", (user, message) => {
     bot.whisper.send(user.id, `🎱 ${response}`);
   }
 
-  else if (command === "emote") {
+  else if (command === "emote" && async () => {
     if (!args.length || args[0] === "list") {
       // List all emotes for the user in chunks to avoid message length limits
       const chunkSize = 20;
@@ -190,7 +190,7 @@ bot.on("chat", (user, message) => {
     } catch (err) {
       bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
     }
-  }
+  })();
 });
 
 console.log("Bot is running...");
