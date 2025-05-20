@@ -178,23 +178,23 @@ bot.on("chat", async (user, message) => {
             const chunk = emotes.slice(i, i + chunkSize)
               .map((e, idx) => `${i + idx + 1}. ${e[0]}`)
               .join("\n");
-            bot.whisper.send(user.id, `📃 Emote List (${i+1}-${Math.min(i+chunkSize, emotes.length)}):\n${chunk}`);
+            await bot.whisper.send(user.id, `📃 Emote List (${i+1}-${Math.min(i+chunkSize, emotes.length)}):\n${chunk}`);
           }
           return;
         }
 
         const index = parseInt(args[0]) - 1;
         if (isNaN(index) || index < 0 || index >= emotes.length) {
-          bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
+          await bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
           return;
         }
 
         try {
-          await bot.room.sendEmote(emotes[index][1], user.id);
-          await bot.room.sendChat(`🎭 ${user.username} is performing: ${emotes[index][0]}`);
+          await bot.emote.play(user.id, emotes[index][1]);
+          await bot.chat.send(`🎭 ${user.username} is performing: ${emotes[index][0]}`);
         } catch (err) {
           console.error("Emote error:", err);
-          await bot.room.sendWhisper(user.id, "❌ Failed to perform emote. Please try again.");
+          await bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
         }
         break;
 
