@@ -125,72 +125,85 @@ bot.on("userLeft", (user) => {
   users.delete(user.id);
 });
 
-// On chat message
-bot.on("chat", (user, message) => {
+// Handle commands
+bot.on("chat", async (user, message) => {
   if (!message.startsWith("/")) return;
 
   const [command, ...args] = message.slice(1).trim().split(/\s+/);
 
-  if (command === "balance") {
-    balances[user.id] ??= 100;
-    bot.whisper.send(user.id, `💰 Your balance: ${balances[user.id]} coins.`);
+  try {
+    switch (command) {
+      case "balance":
+        balances[user.id] ??= 100;
+        bot.whisper.send(user.id, `💰 Your balance: ${balances[user.id]} coins.`);
+        break;
+
+      case "gamble":
+        const amount = parseInt(args[0]);
+        if (isNaN(amount) || amount <= 0) {
+          bot.whisper.send(user.id, "❗ Usage: /gamble <positive number>");
+          return;
+        }
+
+        balances[user.id] ??= 100;
+        if (balances[user.id] < amount) {
+          bot.whisper.send(user.id, `❌ You only have ${balances[user.id]} coins.`);
+          return;
+        }
+
+        const win = Math.random() < 0.5;
+        if (win) {
+          balances[user.id] += amount;
+          bot.whisper.send(user.id, `🎉 You won ${amount} coins! New balance: ${balances[user.id]}.`);
+        } else {
+          balances[user.id] -= amount;
+          bot.whisper.send(user.id, `😢 You lost ${amount} coins. New balance: ${balances[user.id]}.`);
+        }
+        break;
+
+      case "8ball":
+        const question = args.join(" ");
+        if (!question) {
+          bot.whisper.send(user.id, "🎱 Ask a question to get an answer!");
+          return;
+        }
+        const response = answers[Math.floor(Math.random() * answers.length)];
+        bot.whisper.send(user.id, `🎱 ${response}`);
+        break;
+
+      case "emote":
+        if (!args.length || args[0] === "list") {
+          const chunkSize = 10;
+          for (let i = 0; i < emotes.length; i += chunkSize) {
+            const chunk = emotes.slice(i, i + chunkSize)
+              .map((e, idx) => `${i + idx + 1}. ${e[0]}`)
+              .join("\n");
+            bot.whisper.send(user.id, `📃 Emote List (${i+1}-${Math.min(i+chunkSize, emotes.length)}):\n${chunk}`);
+          }
+          return;
+        }
+
+        const index = parseInt(args[0]) - 1;
+        if (isNaN(index) || index < 0 || index >= emotes.length) {
+          bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
+          return;
+        }
+
+        try {
+          await bot.emote.perform(user.id, emotes[index][1]);
+          bot.whisper.send(user.id, `🎭 Performing: ${emotes[index][0]}`);
+        } catch (err) {
+          bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
+        }
+        break;
+
+      default:
+        bot.whisper.send(user.id, "❓ Unknown command. Available commands: /balance, /gamble, /8ball, /emote");
+    }
+  } catch (error) {
+    console.error("Error handling command:", error);
+    bot.whisper.send(user.id, "❌ An error occurred while processing your command.");
   }
-
-  else if (command === "gamble") {
-    const amount = parseInt(args[0]);
-    if (isNaN(amount) || amount <= 0) {
-      return bot.whisper.send(user.id, "❗ Usage: /gamble <positive number>");
-    }
-    balances[user.id] ??= 100;
-    if (balances[user.id] < amount) {
-      return bot.whisper.send(user.id, `❌ You only have ${balances[user.id]} coins.`);
-    }
-
-    const win = Math.random() < 0.5;
-    if (win) {
-      balances[user.id] += amount;
-      bot.whisper.send(user.id, `🎉 You won ${amount} coins! New balance: ${balances[user.id]}.`);
-    } else {
-      balances[user.id] -= amount;
-      bot.whisper.send(user.id, `😢 You lost ${amount} coins. New balance: ${balances[user.id]}.`);
-    }
-  }
-
-  else if (command === "8ball") {
-    const question = args.join(" ");
-    if (!question) {
-      return bot.whisper.send(user.id, "🎱 Ask a question to get an answer!");
-    }
-    const response = answers[Math.floor(Math.random() * answers.length)];
-    bot.whisper.send(user.id, `🎱 ${response}`);
-  }
-
-  else if (command === "emote" && async () => {
-    if (!args.length || args[0] === "list") {
-      // List all emotes for the user in chunks to avoid message length limits
-      const chunkSize = 20;
-      for (let i = 0; i < emotes.length; i += chunkSize) {
-        const chunk = emotes.slice(i, i + chunkSize)
-          .map((e, idx) => `${i + idx + 1}. ${e[0]}`)
-          .join("\n");
-        bot.whisper.send(user.id, `📃 Emote List (${i+1}-${Math.min(i+chunkSize, emotes.length)}):\n${chunk}`);
-      }
-      return;
-    }
-
-    const index = parseInt(args[0]) - 1;
-    if (isNaN(index) || index < 0 || index >= emotes.length) {
-      return bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
-    }
-
-    try {
-      const emoteName = emotes[index][1];
-      await bot.emote.perform(user.id, emoteName);
-      bot.whisper.send(user.id, `🎭 Performing: ${emotes[index][0]}`);
-    } catch (err) {
-      bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
-    }
-  })();
 });
 
 console.log("Bot is running...");
