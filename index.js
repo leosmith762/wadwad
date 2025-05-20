@@ -166,15 +166,30 @@ bot.on("chat", (user, message) => {
   }
 
   else if (command === "emote") {
-    // /emote <number>
+    if (!args.length || args[0] === "list") {
+      // List all emotes for the user in chunks to avoid message length limits
+      const chunkSize = 20;
+      for (let i = 0; i < emotes.length; i += chunkSize) {
+        const chunk = emotes.slice(i, i + chunkSize)
+          .map((e, idx) => `${i + idx + 1}. ${e[0]}`)
+          .join("\n");
+        bot.whisper.send(user.id, `📃 Emote List (${i+1}-${Math.min(i+chunkSize, emotes.length)}):\n${chunk}`);
+      }
+      return;
+    }
+
     const index = parseInt(args[0]) - 1;
     if (isNaN(index) || index < 0 || index >= emotes.length) {
-      // List all emotes for the user
-      const emoteList = emotes.map((e, i) => `${i + 1}. ${e[0]}`).join("\n");
-      return bot.whisper.send(user.id, `📃 Emote list:\n${emoteList}`);
+      return bot.whisper.send(user.id, "❌ Invalid emote number! Use '/emote list' to see available emotes.");
     }
-    const emoteName = emotes[index][1];
-    bot.emote.perform(user.id, emoteName);
+
+    try {
+      const emoteName = emotes[index][1];
+      await bot.emote.perform(user.id, emoteName);
+      bot.whisper.send(user.id, `🎭 Performing: ${emotes[index][0]}`);
+    } catch (err) {
+      bot.whisper.send(user.id, "❌ Failed to perform emote. Please try again.");
+    }
   }
 });
 
