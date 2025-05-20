@@ -218,4 +218,395 @@
 
         .emote-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .emote-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .emote-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .emote-name {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .emote-id {
+            font-size: 0.8em;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .avatar-preview-section, .chat-section {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .avatar {
+            width: 300px;
+            height: 500px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-head {
+            width: 120px;
+            height: 120px;
+            background: #ffd7b5;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 10px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        .avatar-body {
+            width: 160px;
+            height: 200px;
+            background: var(--primary);
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        /* Simple animations for emotes */
+        .animate-wave {
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        .animate-dance {
+            animation: dance 1.5s ease-in-out infinite;
+        }
+        @keyframes dance {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .animate-jump {
+            animation: jump 1s ease-in-out infinite;
+        }
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Chat */
+        #chat-container {
+            max-height: 350px;
+            overflow-y: auto;
+            background: #111;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #eee;
+            line-height: 1.3;
+        }
+        .chat-message {
+            margin-bottom: 8px;
+        }
+        .chat-username {
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 6px;
+        }
+
+        /* Select styling */
+        select, input[type="color"] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            font-family: monospace;
+            background: #222;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 320px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+        select:hover, input[type="color"]:hover {
+            background: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 1.1em;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h2>Highrise Bot Control Center</h2>
+    </nav>
+
+    <div class="container">
+        <section class="stats-grid">
+            <div class="stat-card">
+                <h3>Online Users</h3>
+                <p class="stat-value" id="online-users">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Commands Used</h3>
+                <p class="stat-value" id="commands-used">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Bot Uptime</h3>
+                <p class="stat-value" id="uptime">0s</p>
+            </div>
+        </section>
+
+        <section class="commands-section">
+            <h3>Supported Commands</h3>
+
+            <div class="command-item">
+                <div class="command-name">/emote &lt;id&gt;</div>
+                <p>Make the bot perform the emote with the specified id.</p>
+                <p class="usage">Usage: /emote 1</p>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/bringall</div>
+                <p>Bring all users to your location.</p>
+                <p class="usage">Usage: /bringall</p>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/gamble &lt;amount&gt;</div>
+                <p>Gamble a specified amount of coins.</p>
+                <p class="usage">Usage: /gamble 100</p>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/8ball &lt;question&gt;</div>
+                <p>Ask the magic 8-ball a question.</p>
+                <p class="usage">Usage: /8ball Will I win?</p>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/balance</div>
+                <p>Show your current coin balance.</p>
+                <p class="usage">Usage: /balance</p>
+            </div>
+            <div class="command-item">
+                <div class="command-name">/say &lt;message&gt;</div>
+                <p>Make the bot say a message.</p>
+                <p class="usage">Usage: /say Hello everyone!</p>
+            </div>
+            <!-- Add more command descriptions as needed -->
+        </section>
+
+        <section class="avatar-preview-section">
+            <h3>Emote Preview</h3>
+            <div class="avatar-container">
+                <div class="avatar" id="avatar">
+                    <div class="avatar-head"></div>
+                    <div class="avatar-body"></div>
+                </div>
+
+                <label for="emote-select">Select Emote:</label>
+                <select id="emote-select">
+                    <option value="">-- Select an emote --</option>
+                </select>
+
+                <label for="outfit-color">Choose Outfit Color:</label>
+                <input type="color" id="outfit-color" value="#00ff9d">
+            </div>
+
+            <div class="emote-grid" id="emote-grid">
+                <!-- Emotes will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <section class="live-feed">
+            <h3>Live Activity Feed</h3>
+            <div id="feed">
+                <p>Waiting for live updates...</p>
+            </div>
+        </section>
+
+        <section class="chat-section">
+            <h3>Live Chat</h3>
+            <div id="chat-container">
+                <p>No chat messages yet.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to Socket.IO server
+        const socket = io();
+
+        // Emotes array: [Name, Emote ID string]
+        const emotes = [
+            ["Wave", "emote-wave"],
+            ["Dance", "dance-hiphop"],
+            ["Dance2", "dance-disco"],
+            ["Jump", "emote-jump"],
+            ["Sit", "emote-sit"],
+            ["Clap", "emote-clap"],
+            ["Laugh", "emote-laugh"],
+            ["Lay Back", "emote-laidback"],
+            ["Cheer", "emote-cheer"],
+            ["Point", "emote-point"],
+            ["Dance3", "dance-bboy"],
+            ["Dance4", "dance-floss"],
+            ["Dance5", "dance-robot"],
+            ["Dance6", "dance-shimmy"],
+            ["Dance7", "dance-salsa"],
+            ["Dance8", "dance-twist"],
+            ["Dance9", "dance-worm"],
+            ["Dance10", "dance-moonwalk"]
+            // Add or modify with your actual emotes list
+        ];
+
+        // Cache DOM elements
+        const emoteGrid = document.getElementById('emote-grid');
+        const emoteSelect = document.getElementById('emote-select');
+        const avatar = document.getElementById('avatar');
+        const onlineUsersEl = document.getElementById('online-users');
+        const commandsUsedEl = document.getElementById('commands-used');
+        const uptimeEl = document.getElementById('uptime');
+        const feedEl = document.getElementById('feed');
+        const chatContainer = document.getElementById('chat-container');
+        const outfitColorInput = document.getElementById('outfit-color');
+
+        // Populate emote grid and select
+        emotes.forEach((emote, idx) => {
+            // Grid cards
+            const card = document.createElement('div');
+            card.className = 'emote-card';
+            card.dataset.id = idx;
+            card.title = emote[0];
+            card.innerHTML = `
+                <div class="emote-name">${emote[0]}</div>
+                <div class="emote-id">${idx}</div>
+            `;
+            card.addEventListener('click', () => {
+                emoteSelect.value = idx;
+                sendEmoteCommand(idx);
+                previewEmote(idx);
+            });
+            emoteGrid.appendChild(card);
+
+            // Select options
+            const option = document.createElement('option');
+            option.value = idx;
+            option.textContent = `${idx} - ${emote[0]}`;
+            emoteSelect.appendChild(option);
+        });
+
+        // On select change
+        emoteSelect.addEventListener('change', (e) => {
+            const idx = e.target.value;
+            if (idx === "") return;
+            sendEmoteCommand(idx);
+            previewEmote(idx);
+        });
+
+        // Send emote command to backend
+        function sendEmoteCommand(index) {
+            socket.emit('command', { cmd: `/emote ${index}` });
+        }
+
+        // Emote preview animations
+        function previewEmote(index) {
+            if (index === "") return;
+
+            const [emoteName, emoteId] = emotes[index];
+            avatar.className = 'avatar'; // reset classes
+            avatar.style.backgroundColor = outfitColorInput.value;
+
+            // Animate depending on emote type
+            if (emoteId.startsWith('dance')) {
+                avatar.classList.add('animate-dance');
+            } else if (emoteId.startsWith('emote')) {
+                if (emoteName.toLowerCase().includes('wave')) {
+                    avatar.classList.add('animate-wave');
+                } else if (emoteName.toLowerCase().includes('jump')) {
+                    avatar.classList.add('animate-jump');
+                } else if (emoteName.toLowerCase().includes('clap')) {
+                    // you could add clap animation class if desired
+                }
+            }
+
+            // Simple scale effect
+            avatar.style.transform = 'scale(1.1)';
+            setTimeout(() => avatar.style.transform = 'scale(1)', 300);
+        }
+
+        // Change outfit color
+        outfitColorInput.addEventListener('input', () => {
+            avatar.style.backgroundColor = outfitColorInput.value;
+        });
+
+        // Socket.IO listeners
+        socket.on('onlineUsers', (count) => {
+            onlineUsersEl.textContent = count;
+        });
+
+        socket.on('commandsUsed', (count) => {
+            commandsUsedEl.textContent = count;
+        });
+
+        socket.on('uptime', (text) => {
+            uptimeEl.textContent = text;
+        });
+
+        socket.on('feed', (message) => {
+            if (!message) return;
+            const div = document.createElement('div');
+            div.className = 'feed-item';
+            div.textContent = message;
+            feedEl.appendChild(div);
+            feedEl.scrollTop = feedEl.scrollHeight;
+        });
+
+        socket.on('chatMessage', ({ username, message }) => {
+            if (!username || !message) return;
+            const p = document.createElement('p');
+            p.className = 'chat-message';
+            p.innerHTML = `<span class="chat-username">${username}:</span> ${message}`;
+            chatContainer.appendChild(p);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    </script>
+</body>
+</html>
