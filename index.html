@@ -1,612 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Highrise Bot Control Center</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #00ff9d;
-            --secondary: #ff00c8;
-            --bg-dark: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
-        }
-
-        * {
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: var(--bg-dark);
-            color: white;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .navbar {
-            background: rgba(26, 26, 26, 0.95);
-            padding: 1rem;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.5);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar h2 {
-            font-family: 'Orbitron', sans-serif;
-            margin: 0;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 80px auto 20px;
-            padding: 20px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--gradient);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 10px 0;
-            font-family: 'Orbitron', sans-serif;
-        }
-
-        .commands-section {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 15px;
-            margin: 30px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .commands-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--gradient);
-        }
-
-        .command-item {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .command-item:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--primary);
-        }
-
-        .command-name {
-            color: var(--primary);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em;
-        }
-
-        .usage {
-            color: #888;
-            font-size: 0.9em;
-            margin-top: 10px;
-            font-family: monospace;
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 5px;
-        }
-
-        .live-feed {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 15px;
-            margin: 30px 0;
-            max-height: 400px;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .live-feed::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background: linear-gradient(transparent, var(--card-bg));
-            pointer-events: none;
-        }
-
-        .feed-item {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .feed-item:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .feed-time {
-            color: var(--secondary);
-            font-family: monospace;
-            white-space: nowrap;
-            width: 80px;
-        }
-
-        .feed-content {
-            flex: 1;
-            overflow-wrap: anywhere;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--primary);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            .stat-card, .commands-section, .live-feed {
-                padding: 15px;
-            }
-
-            .stat-value {
-                font-size: 2em;
-            }
-        }
-
-        .emote-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .emote-card {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1);
-            user-select: none;
-            transition: all 0.2s ease;
-        }
-
-        .emote-card:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .emote-name {
-            color: var(--primary);
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .emote-id {
-            font-size: 0.8em;
-            color: #888;
-            font-family: monospace;
-        }
-
-        .avatar-preview-section, .chat-section {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 15px;
-            margin: 30px 0;
-        }
-
-        .avatar-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .avatar {
-            width: 300px;
-            height: 500px;
-            background: var(--card-bg);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            border: 2px solid var(--primary);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .avatar-head {
-            width: 120px;
-            height: 120px;
-            background: #ffd7b5;
-            border-radius: 50%;
-            position: relative;
-            margin-bottom: 10px;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-        }
-
-        .avatar-body {
-            width: 160px;
-            height: 200px;
-            background: var(--primary);
-            border-radius: 20px 20px 0 0;
-            position: relative;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-        }
-
-        /* Simple animations for emotes */
-        .animate-wave {
-            animation: wave 2s ease-in-out infinite;
-        }
-        @keyframes wave {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(20deg); }
-        }
-
-        .animate-dance {
-            animation: dance 1.5s ease-in-out infinite;
-        }
-        @keyframes dance {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(10px) rotate(5deg); }
-        }
-
-        .animate-jump {
-            animation: jump 1s ease-in-out infinite;
-        }
-        @keyframes jump {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        /* Chat */
-        #chat-container {
-            max-height: 350px;
-            overflow-y: auto;
-            background: #111;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: monospace;
-            font-size: 14px;
-            color: #eee;
-            line-height: 1.3;
-        }
-        .chat-message {
-            margin-bottom: 8px;
-        }
-        .chat-username {
-            font-weight: 700;
-            color: var(--primary);
-            margin-right: 6px;
-        }
-
-        /* Select styling */
-        select, input[type="color"] {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
-            font-family: monospace;
-            background: #222;
-            color: white;
-            margin-top: 10px;
-            width: 100%;
-            max-width: 320px;
-            cursor: pointer;
-            outline: none;
-            transition: background-color 0.3s ease;
-        }
-        select:hover, input[type="color"]:hover {
-            background: #333;
-        }
-
-        label {
-            display: block;
-            margin-top: 20px;
-            font-weight: 600;
-            font-size: 1.1em;
-            color: var(--primary);
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Highrise Bot Helper</title>
+<style>
+  :root {
+    --primary-color: #2e86de;
+    --bg-color: #f9f9f9;
+    --text-color: #333;
+    --tab-active-bg: #2e86de;
+    --tab-active-color: white;
+    --tab-hover-bg: #d6e4ff;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
+  header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  nav {
+    display: flex;
+    background: white;
+    box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+  }
+  nav button {
+    flex: 1;
+    border: none;
+    background: white;
+    padding: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  nav button:hover:not(.active) {
+    background: var(--tab-hover-bg);
+  }
+  nav button.active {
+    background: var(--tab-active-bg);
+    color: var(--tab-active-color);
+    font-weight: 600;
+  }
+  main {
+    padding: 2rem;
+    max-width: 900px;
+    margin: auto;
+  }
+  section {
+    display: none;
+  }
+  section.active {
+    display: block;
+  }
+  /* Emotes grid */
+  .emotes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(80px,1fr));
+    gap: 12px;
+  }
+  .emote-card {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+    padding: 0.75rem;
+    text-align: center;
+    user-select: none;
+    cursor: default;
+  }
+  .emote-number {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+  }
+  /* Items list */
+  .items-list,
+  .commands-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .items-list li,
+  .commands-list li {
+    background: white;
+    margin-bottom: 0.6rem;
+    padding: 0.7rem 1rem;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  }
+  .item-price {
+    float: right;
+    font-weight: 600;
+    color: #555;
+  }
+  footer {
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.85rem;
+    color: #888;
+  }
+</style>
 </head>
 <body>
-    <nav class="navbar">
-        <h2>Highrise Bot Control Center</h2>
-    </nav>
+<header>Highrise Bot Helper</header>
+<nav>
+  <button id="tab-emotes" class="active" aria-controls="emotes" aria-selected="true">Emotes</button>
+  <button id="tab-items" aria-controls="items" aria-selected="false">Items</button>
+  <button id="tab-commands" aria-controls="commands" aria-selected="false">Commands</button>
+</nav>
 
-    <div class="container">
-        <section class="stats-grid">
-            <div class="stat-card">
-                <h3>Online Users</h3>
-                <p class="stat-value" id="online-users">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Commands Used</h3>
-                <p class="stat-value" id="commands-used">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Bot Uptime</h3>
-                <p class="stat-value" id="uptime">0s</p>
-            </div>
-        </section>
-
-        <section class="commands-section">
-            <h3>Supported Commands</h3>
-
-            <div class="command-item">
-                <div class="command-name">/emote &lt;id&gt;</div>
-                <p>Make the bot perform the emote with the specified id.</p>
-                <p class="usage">Usage: /emote 1</p>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/bringall</div>
-                <p>Bring all users to your location.</p>
-                <p class="usage">Usage: /bringall</p>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/gamble &lt;amount&gt;</div>
-                <p>Gamble a specified amount of coins.</p>
-                <p class="usage">Usage: /gamble 100</p>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/8ball &lt;question&gt;</div>
-                <p>Ask the magic 8-ball a question.</p>
-                <p class="usage">Usage: /8ball Will I win?</p>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/balance</div>
-                <p>Show your current coin balance.</p>
-                <p class="usage">Usage: /balance</p>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/say &lt;message&gt;</div>
-                <p>Make the bot say a message.</p>
-                <p class="usage">Usage: /say Hello everyone!</p>
-            </div>
-            <!-- Add more command descriptions as needed -->
-        </section>
-
-        <section class="avatar-preview-section">
-            <h3>Emote Preview</h3>
-            <div class="avatar-container">
-                <div class="avatar" id="avatar">
-                    <div class="avatar-head"></div>
-                    <div class="avatar-body"></div>
-                </div>
-
-                <label for="emote-select">Select Emote:</label>
-                <select id="emote-select">
-                    <option value="">-- Select an emote --</option>
-                </select>
-
-                <label for="outfit-color">Choose Outfit Color:</label>
-                <input type="color" id="outfit-color" value="#00ff9d">
-            </div>
-
-            <div class="emote-grid" id="emote-grid">
-                <!-- Emotes will be dynamically inserted here -->
-            </div>
-        </section>
-
-        <section class="live-feed">
-            <h3>Live Activity Feed</h3>
-            <div id="feed">
-                <p>Waiting for live updates...</p>
-            </div>
-        </section>
-
-        <section class="chat-section">
-            <h3>Live Chat</h3>
-            <div id="chat-container">
-                <p>No chat messages yet.</p>
-            </div>
-        </section>
+<main>
+  <!-- Emotes Page -->
+  <section id="emotes" class="active" role="tabpanel" tabindex="0" aria-labelledby="tab-emotes">
+    <h2>Emotes List</h2>
+    <div class="emotes-grid" id="emotes-grid">
+      <!-- Emotes inserted by JS -->
     </div>
+  </section>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        // Connect to Socket.IO server
-        const socket = io();
+  <!-- Items Page -->
+  <section id="items" role="tabpanel" tabindex="0" aria-labelledby="tab-items">
+    <h2>Highrise Items (Most Expensive → Least Expensive)</h2>
+    <ul class="items-list" id="items-list">
+      <!-- Items inserted by JS -->
+    </ul>
+  </section>
 
-        // Emotes array: [Name, Emote ID string]
-        const emotes = [
-            ["Wave", "emote-wave"],
-            ["Dance", "dance-hiphop"],
-            ["Dance2", "dance-disco"],
-            ["Jump", "emote-jump"],
-            ["Sit", "emote-sit"],
-            ["Clap", "emote-clap"],
-            ["Laugh", "emote-laugh"],
-            ["Lay Back", "emote-laidback"],
-            ["Cheer", "emote-cheer"],
-            ["Point", "emote-point"],
-            ["Dance3", "dance-bboy"],
-            ["Dance4", "dance-floss"],
-            ["Dance5", "dance-robot"],
-            ["Dance6", "dance-shimmy"],
-            ["Dance7", "dance-salsa"],
-            ["Dance8", "dance-twist"],
-            ["Dance9", "dance-worm"],
-            ["Dance10", "dance-moonwalk"]
-            // Add or modify with your actual emotes list
-        ];
+  <!-- Commands Page -->
+  <section id="commands" role="tabpanel" tabindex="0" aria-labelledby="tab-commands">
+    <h2>Bot Commands</h2>
+    <ul class="commands-list" id="commands-list">
+      <!-- Commands inserted by JS -->
+    </ul>
+  </section>
+</main>
 
-        // Cache DOM elements
-        const emoteGrid = document.getElementById('emote-grid');
-        const emoteSelect = document.getElementById('emote-select');
-        const avatar = document.getElementById('avatar');
-        const onlineUsersEl = document.getElementById('online-users');
-        const commandsUsedEl = document.getElementById('commands-used');
-        const uptimeEl = document.getElementById('uptime');
-        const feedEl = document.getElementById('feed');
-        const chatContainer = document.getElementById('chat-container');
-        const outfitColorInput = document.getElementById('outfit-color');
+<footer>© 2025 Hr.BotHelper by XGAMER91</footer>
 
-        // Populate emote grid and select
-        emotes.forEach((emote, idx) => {
-            // Grid cards
-            const card = document.createElement('div');
-            card.className = 'emote-card';
-            card.dataset.id = idx;
-            card.title = emote[0];
-            card.innerHTML = `
-                <div class="emote-name">${emote[0]}</div>
-                <div class="emote-id">${idx}</div>
-            `;
-            card.addEventListener('click', () => {
-                emoteSelect.value = idx;
-                sendEmoteCommand(idx);
-                previewEmote(idx);
-            });
-            emoteGrid.appendChild(card);
+<script>
+  // Emotes data: number → name
+  const emotes = [
+    "Wave", "Dance", "Laugh", "Point", "Sit", "Clap", "Cry", "Angry",
+    "Cheer", "Bow", "Facepalm", "Thumbs Up", "Shrug", "Sleep", "Jump",
+    "Run", "Kick", "Salute", "Meditate", "Spin", "Nod", "Shake Head",
+    "Blow Kiss", "T-Pose", "Dab", "Laid Back", "Snap", "Cheer Loud",
+    "Flip", "Facepalm 2", "Laugh 2", "Dance 2", "Dance 3", "Dance 4",
+    "Dance 5", "Dance 6", "Dance 7", "Dance 8", "Dance 9", "Dance 10",
+    "Dance 11", "Dance 12", "Dance 13", "Dance 14", "Dance 15", "Dance 16",
+    "Dance 17", "Dance 18", "Dance 19", "Dance 20", "Dance 21", "Dance 22",
+    "Dance 23", "Dance 24", "Dance 25", "Dance 26", "Dance 27", "Dance 28",
+    "Dance 29", "Dance 30", "Dance 31", "Dance 32", "Dance 33", "Dance 34",
+    "Dance 35", "Dance 36", "Dance 37", "Dance 38", "Dance 39", "Dance 40",
+    "Dance 41", "Dance 42", "Dance 43", "Dance 44", "Dance 45", "Dance 46",
+    "Dance 47", "Dance 48"
+  ];
 
-            // Select options
-            const option = document.createElement('option');
-            option.value = idx;
-            option.textContent = `${idx} - ${emote[0]}`;
-            emoteSelect.appendChild(option);
-        });
+  // Example Highrise items sorted most to least expensive
+  const items = [
+    { name: "Diamond Crown", price: "5000 Gold" },
+    { name: "Golden Throne", price: "4500 Gold" },
+    { name: "Royal Robe", price: "3000 Gold" },
+    { name: "Emerald Necklace", price: "2800 Gold" },
+    { name: "Magic Staff", price: "2500 Gold" },
+    { name: "Fancy Hat", price: "2000 Gold" },
+    { name: "Stylish Jacket", price: "1500 Gold" },
+    { name: "Silver Ring", price: "1000 Gold" },
+    { name: "Leather Boots", price: "750 Gold" },
+    { name: "Basic Shirt", price: "200 Gold" }
+  ];
 
-        // On select change
-        emoteSelect.addEventListener('change', (e) => {
-            const idx = e.target.value;
-            if (idx === "") return;
-            sendEmoteCommand(idx);
-            previewEmote(idx);
-        });
+  // Bot commands list
+  const commands = [
+    "/help - Show help message",
+    "/emote <number> - Perform an emote",
+    "/dance - Start dancing",
+    "/stopdance - Stop dancing",
+    "/bringall - Bring everyone to you",
+    "/vip <user> - Give VIP to a user",
+    "/8ball <question> - Ask the magic 8-ball",
+    "/gamble <amount> - Gamble your gold",
+    "/balance - Check your balance",
+    "/say <message> - Bot says a message",
+    "/autodanceself start|stop - Toggle auto dance",
+    "/print <message> - Print message in chat"
+  ];
 
-        // Send emote command to backend
-        function sendEmoteCommand(index) {
-            socket.emit('command', { cmd: `/emote ${index}` });
-        }
+  // DOM Elements
+  const tabs = document.querySelectorAll("nav button");
+  const sections = document.querySelectorAll("main section");
 
-        // Emote preview animations
-        function previewEmote(index) {
-            if (index === "") return;
+  // Tab click handler
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      // Remove active class on all tabs & sections
+      tabs.forEach(t => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      });
+      sections.forEach(sec => sec.classList.remove("active"));
 
-            const [emoteName, emoteId] = emotes[index];
-            avatar.className = 'avatar'; // reset classes
-            avatar.style.backgroundColor = outfitColorInput.value;
+      // Activate current tab & section
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
+      document.getElementById(tab.getAttribute("aria-controls")).classList.add("active");
+    });
+  });
 
-            // Animate depending on emote type
-            if (emoteId.startsWith('dance')) {
-                avatar.classList.add('animate-dance');
-            } else if (emoteId.startsWith('emote')) {
-                if (emoteName.toLowerCase().includes('wave')) {
-                    avatar.classList.add('animate-wave');
-                } else if (emoteName.toLowerCase().includes('jump')) {
-                    avatar.classList.add('animate-jump');
-                } else if (emoteName.toLowerCase().includes('clap')) {
-                    // you could add clap animation class if desired
-                }
-            }
+  // Populate Emotes page
+  const emotesGrid = document.getElementById("emotes-grid");
+  emotes.forEach((name, i) => {
+    const emoteCard = document.createElement("div");
+    emoteCard.className = "emote-card";
+    emoteCard.innerHTML = `<div class="emote-number">${i + 1}</div>${name}`;
+    emotesGrid.appendChild(emoteCard);
+  });
 
-            // Simple scale effect
-            avatar.style.transform = 'scale(1.1)';
-            setTimeout(() => avatar.style.transform = 'scale(1)', 300);
-        }
+  // Populate Items page
+  const itemsList = document.getElementById("items-list");
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item.name;
+    const priceSpan = document.createElement("span");
+    priceSpan.className = "item-price";
+    priceSpan.textContent = item.price;
+    li.appendChild(priceSpan);
+    itemsList.appendChild(li);
+  });
 
-        // Change outfit color
-        outfitColorInput.addEventListener('input', () => {
-            avatar.style.backgroundColor = outfitColorInput.value;
-        });
-
-        // Socket.IO listeners
-        socket.on('onlineUsers', (count) => {
-            onlineUsersEl.textContent = count;
-        });
-
-        socket.on('commandsUsed', (count) => {
-            commandsUsedEl.textContent = count;
-        });
-
-        socket.on('uptime', (text) => {
-            uptimeEl.textContent = text;
-        });
-
-        socket.on('feed', (message) => {
-            if (!message) return;
-            const div = document.createElement('div');
-            div.className = 'feed-item';
-            div.textContent = message;
-            feedEl.appendChild(div);
-            feedEl.scrollTop = feedEl.scrollHeight;
-        });
-
-        socket.on('chatMessage', ({ username, message }) => {
-            if (!username || !message) return;
-            const p = document.createElement('p');
-            p.className = 'chat-message';
-            p.innerHTML = `<span class="chat-username">${username}:</span> ${message}`;
-            chatContainer.appendChild(p);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        });
-    </script>
+  // Populate Commands page
+  const commandsList = document.getElementById("commands-list");
+  commands.forEach(cmd => {
+    const li = document.createElement("li");
+    li.textContent = cmd;
+    commandsList.appendChild(li);
+  });
+</script>
 </body>
 </html>
