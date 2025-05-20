@@ -65,7 +65,7 @@
     }
     .emotes-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 16px;
     }
     .emote-card {
@@ -74,12 +74,35 @@
       border-radius: 8px;
       text-align: center;
       box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
     }
     .emote-number {
       color: var(--accent);
       font-size: 1.2rem;
       font-weight: bold;
+      margin-bottom: 0.2rem;
+    }
+    .emote-name {
+      font-weight: 600;
+      font-size: 1rem;
       margin-bottom: 0.5rem;
+    }
+    .emote-card button {
+      background: var(--accent);
+      border: none;
+      border-radius: 5px;
+      color: #000;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+    }
+    .emote-card button:hover {
+      background-color: #e08e0b;
     }
     .items-list, .commands-list {
       list-style: none;
@@ -149,70 +172,91 @@
     });
   });
 
-  // Emotes (1-80)
+  // Emotes list: [Display Name, Internal Emote Name]
   const emotes = [
-    "Wave", "Laugh", "Dance", "Point", "Sit", "Clap", "Cry", "Angry", "Cheer", "Bow",
-    "Facepalm", "Thumbs Up", "Shrug", "Sleep", "Jump", "Run", "Kick", "Salute", "Meditate",
-    "Spin", "Nod", "Shake Head", "Blow Kiss", "T-Pose", "Dab", "Laid Back", "Snap", "Flip",
-    "Sigh", "Finger Guns", "Stretch", "Groove", "Headbang", "Moonwalk", "Robot", "Breakdance",
-    "Jump Spin", "Happy Hop", "Slide", "Stomp", "Pop Lock", "Heart Hands", "Twist", "Swag Walk",
-    "Power Move", "Peace", "Shrug Dance", "Funky Step", "Dizzy", "Groovy", "Slide Left",
-    "Slide Right", "Jazz Hands", "Samba", "Wave 2", "Robot 2", "Wiggle", "Boogie", "Spin 2",
-    "Ballet", "Dab 2", "Clown", "Flex", "Bunny Hop", "Ninja", "Cartwheel", "Backflip",
-    "Sit Spin", "Hover", "Air Guitar", "Yawn", "Cough", "Flex 2", "Sleep 2", "Sing", "Head Nod",
-    "Dizzy Spin", "Pose", "Dance Loop", "Breakdance 2"
+    ["Sit", "idle-loop-sitfloor"], ["Enthused", "idle-enthusiastic"], ["Yes", "emote-yes"],
+    ["The Wave", "emote-wave"], ["Tired", "emote-tired"], ["Snowball Fight!", "emote-snowball"],
+    ["Snow Angel", "emote-snowangel"], ["Shy", "emote-shy"], ["Sad", "emote-sad"],
+    ["No", "emote-no"], ["Model", "emote-model"], ["Flirty Wave", "emote-lust"],
+    ["Laugh", "emote-laughing"], ["Kiss", "emote-kiss"], ["Sweating", "emote-hot"],
+    ["Hello", "emote-hello"], ["Greedy Emote", "emote-greedy"], ["Face Palm", "emote-exasperatedb"],
+    ["Curtsy", "emote-curtsy"], ["Confusion", "emote-confused"], ["Charging", "emote-charging"],
+    ["Bow", "emote-bow"], ["Thumbs Up", "emoji-thumbsup"], ["Tummy Ache", "emoji-gagging"],
+    ["Flex", "emoji-flex"], ["Cursing Emote", "emoji-cursing"], ["Raise The Roof", "emoji-celebrate"],
+    ["Angry", "emoji-angry"], ["Savage Dance", "dance-tiktok8"], ["Don't Start Now", "dance-tiktok2"],
+    ["Let's Go Shopping", "dance-shoppingcart"], ["Russian Dance", "dance-russian"],
+    ["Penny's Dance", "dance-pennywise"], ["Macarena", "dance-macarena"], ["K-Pop Dance", "dance-blackpink"],
+    ["Hyped", "emote-hyped"], ["Jinglebell", "dance-jinglebell"], ["Nervous", "idle-nervous"],
+    ["Toilet", "idle-toilet"], ["Astronaut", "emote-astronaut"], ["Dance Zombie", "dance-zombie"],
+    ["Heart Eyes", "emote-hearteyes"], ["Swordfight", "emote-swordfight"], ["TimeJump", "emote-timejump"],
+    ["Snake", "emote-snake"], ["Heart Fingers", "emote-heartfingers"], ["Float", "emote-float"],
+    ["Telekinesis", "emote-telekinesis"], ["Penguin dance", "dance-pinguin"], ["Creepy puppet", "dance-creepypuppet"],
+    ["Sleigh", "emote-sleigh"], ["Maniac", "emote-maniac"], ["Energy Ball", "emote-energyball"],
+    ["Singing", "idle_singing"], ["Frog", "emote-frog"], ["Superpose", "emote-superpose"],
+    ["Cute", "emote-cute"], ["TikTok Dance 9", "dance-tiktok9"], ["Weird Dance", "dance-weird"],
+    ["TikTok Dance 10", "dance-tiktok10"], ["Pose 7", "emote-pose7"], ["Pose 8", "emote-pose8"],
+    ["Casual Dance", "idle-dance-casual"], ["Pose 1", "emote-pose1"], ["Pose 3", "emote-pose3"],
+    ["Pose 5", "emote-pose5"], ["Cutey", "emote-cutey"], ["Punk Guitar", "emote-punkguitar"],
+    ["Fashionista", "emote-fashionista"], ["Gravity", "emote-gravity"], ["Ice Cream Dance", "dance-icecream"],
+    ["Wrong Dance", "dance-wrong"], ["UwU", "idle-uwu"], ["TikTok Dance 4", "idle-dance-tiktok4"],
+    ["Advanced Shy", "emote-shy2"], ["Anime Dance", "dance-anime"], ["Kawaii", "dance-kawai"],
+    ["Scritchy", "idle-wild"], ["Ice Skating", "emote-iceskating"], ["SurpriseBig", "emote-pose6"],
+    ["Celebration Step", "emote-celebrationstep"], ["Creepycute", "emote-creepycute"], ["Pose 10", "emote-pose10"],
+    ["Boxer", "emote-boxer"], ["Head Blowup", "emote-headblowup"], ["Ditzy Pose", "emote-pose9"],
+    ["Teleporting", "emote-teleporting"], ["Touch", "dance-touch"], ["Air Guitar", "idle-guitar"],
+    ["This Is For You", "emote-gift"], ["Push it", "dance-employee"]
   ];
-  emotes.forEach((name, i) => {
+
+  const emotesGrid = document.getElementById("emotes-grid");
+
+  function triggerEmote(index) {
+    // Example function to trigger emote by index
+    // Replace with your actual bot interaction code
+    alert(`Triggering emote #${index + 1}: ${emotes[index][0]} (${emotes[index][1]})`);
+  }
+
+  // Render emotes grid
+  emotes.forEach((emote, i) => {
     const card = document.createElement("div");
     card.className = "emote-card";
-    card.innerHTML = `<div class="emote-number">${i + 1}</div>${name}`;
-    document.getElementById("emotes-grid").appendChild(card);
+    card.innerHTML = `
+      <div class="emote-number">#${i + 1}</div>
+      <div class="emote-name">${emote[0]}</div>
+      <button onclick="triggerEmote(${i})">Test</button>
+    `;
+    emotesGrid.appendChild(card);
   });
 
-  // Realistic expensive items
+  // Sample items list (replace with actual data as needed)
   const items = [
-    { name: "Dark Matter Halo", price: "1,500,000g" },
-    { name: "Devilish Wings", price: "1,200,000g" },
-    { name: "Phantom Cloak", price: "1,000,000g" },
-    { name: "Ghost Aura", price: "950,000g" },
-    { name: "Galaxy Trail", price: "900,000g" },
-    { name: "Golden Fox Ears", price: "800,000g" },
-    { name: "Celestial Staff", price: "700,000g" },
-    { name: "Fire Horns", price: "600,000g" },
-    { name: "Dark Flame Mask", price: "500,000g" },
-    { name: "Neon Wings", price: "400,000g" }
+    { name: "Rare Hat", price: "5000 Gold" },
+    { name: "Exclusive Outfit", price: "7500 Gold" },
+    { name: "Golden Wings", price: "10000 Gold" },
   ];
+
+  const itemsList = document.getElementById("items-list");
   items.forEach(item => {
     const li = document.createElement("li");
-    li.textContent = item.name;
-    const price = document.createElement("span");
-    price.className = "item-price";
-    price.textContent = item.price;
-    li.appendChild(price);
-    document.getElementById("items-list").appendChild(li);
+    li.innerHTML = `${item.name} <span class="item-price">${item.price}</span>`;
+    itemsList.appendChild(li);
   });
 
-  // Commands
+  // Sample commands list (replace with actual commands as needed)
   const commands = [
-    "/help — Show all commands",
-    "/emote <number> — Do an emote by number",
-    "/bringall — Bring all users to you",
-    "/vip <user> — Grant VIP to a user",
-    "/say <msg> — Make bot say a message",
-    "/print <msg> — Print to console",
-    "/8ball <question> — Ask the magic 8ball",
-    "/gamble <amount> — Gamble coins",
-    "/balance — Show your coin balance",
-    "/give <user> <amount> — Transfer coins",
-    "/leaderboard — Show top users",
-    "/autodanceself start|stop — Auto dance toggle",
-    "/music <song> — Play a song",
-    "/ping — Check bot latency"
+    "/emote <number> - Perform an emote by number",
+    "/balance - Check your balance",
+    "/gamble <amount> - Gamble gold",
+    "/8ball <question> - Ask the magic 8-ball",
+    "/say <message> - Make the bot say something",
+    "/bringall - Bring all users to you",
+    "/vip <user> - Grant VIP status",
   ];
+
+  const commandsList = document.getElementById("commands-list");
   commands.forEach(cmd => {
     const li = document.createElement("li");
     li.textContent = cmd;
-    document.getElementById("commands-list").appendChild(li);
+    commandsList.appendChild(li);
   });
 </script>
 
